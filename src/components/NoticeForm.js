@@ -8,7 +8,7 @@ import AttachIcon from "@material-ui/icons/AttachFile";
 import ReplayIcon from "@material-ui/icons/Replay";
 import {
     formatMessageWithValues, withModulesManager, withHistory, historyPush, journalize,
-    Form, ProgressOrError, formatMessage, coreAlert
+    Form, ProgressOrError, formatMessage, coreAlert, coreConfirm
 } from "@openimis/fe-core";
 import NoticeMasterPanel from "../components/NoticeMasterPanel";
 import NoticeNotificationPanel from "../components/NoticeNotificationPanel";
@@ -30,8 +30,9 @@ class NoticeForm extends Component {
         notice_uuid: null,
         notice: this._newNotice(),
         newNotice: true,
-        attachmentsNotice: null, 
-        readOnlydevMode : false
+        isSaved: false,
+        attachmentsNotice: null,
+        readOnlyAfterSave: false // New flag to track readonly after save
     }
 
     _newNotice() {
@@ -46,7 +47,7 @@ class NoticeForm extends Component {
             isActive: this.props.notice?.isActive ?? true,
             sendSms: this.props.notice?.sendSms ?? false,
             sendEmail: this.props.notice?.sendEmail ?? false,
-            attachmentsCount: this.props.notice?.attachmentsCount ?? 0, // Track attachment count
+            attachmentsCount: this.props.notice?.attachmentsCount ?? 0,
             schedulePublish: this.props.notice?.schedulePublish ?? false,
             publishStartDate: this.props.notice?.publishStartDate ?? null,
         };
@@ -87,12 +88,39 @@ class NoticeForm extends Component {
                 notice: this._newNotice(),
                 newNotice: true,
                 lockNew: false,
-                notice_uuid: null
+                isSaved: false,
+                notice_uuid: null,
+                readOnlyAfterSave: false
             });
         } else if (prevProps.submittingMutation && !this.props.submittingMutation) {
             this.props.journalize(this.props.mutation);
-            this.setState({ reset: this.state.reset + 1 });
+            const wasNew = this.state.newNotice;
+            this.setState({ 
+                reset: this.state.reset + 1, 
+                isSaved: true, 
+                lockNew: false,
+                readOnlyAfterSave: true // Set readonly after save
+            }, () => {
+                // Show popup only for newly created notices
+                if (wasNew) {
+                    this.showUploadDocumentsPrompt();
+                }
+            });
         }
+    }
+
+    showUploadDocumentsPrompt = () => {
+        const { intl, coreConfirm } = this.props;
+        
+        coreConfirm(
+            formatMessage(intl, "notice", "notice.created.title"),
+            formatMessage(intl, "notice", "notice.uploadDocuments.prompt"),
+        ).then((confirmed) => {
+            if (confirmed) {
+                // Open attachments dialog
+                this.setState({ attachmentsNotice: this.state.notice });
+            }
+        });
     }
 
     _add = () => {
@@ -101,6 +129,7 @@ class NoticeForm extends Component {
                 notice: this._newNotice(),
                 newNotice: true,
                 lockNew: false,
+                readOnlyAfterSave: false,
                 reset: state.reset + 1,
             }),
             () => {
@@ -111,6 +140,7 @@ class NoticeForm extends Component {
     }
 
     reload = () => {
+        this.setState({ readOnlyAfterSave: false }); // Reset readonly on reload
         this.props.getNotice(
             this.props.modulesManager,
             this.state.notice_uuid
@@ -150,10 +180,10 @@ class NoticeForm extends Component {
             intl, notice_uuid, fetchingNotice, fetchedNotice, errorNotice,
             add, save, rights, classes
         } = this.props;
-        const { notice, lockNew } = this.state;
+        const { notice, lockNew, readOnlyAfterSave } = this.state;
 
-        const readOnly = ((lockNew || !rights.includes(RIGHT_ADD)) && this.state.readOnlydevMode); // Lock form after save or if no add rights
-        console.log("readOnly", readOnly);
+        const readOnly = readOnlyAfterSave;
+        console.log("readOnly", readOnly, "readOnlyAfterSave", readOnlyAfterSave, "lockNew", lockNew, "rights", rights);
 
         const actions = [];
         if (notice_uuid) {
@@ -163,7 +193,7 @@ class NoticeForm extends Component {
                 onlyIfDirty: !readOnly,
             });
         }
-        if (!readOnly || notice.attachmentsCount > 0) {
+        if (!!notice_uuid && (!readOnly || notice.attachmentsCount > 0)) {
             actions.push({
                 doIt: () => this.setState({ attachmentsNotice: notice }),
                 icon: (
@@ -173,6 +203,7 @@ class NoticeForm extends Component {
                 ),
             });
         }
+
 
         return (
             <div>
@@ -190,24 +221,24 @@ class NoticeForm extends Component {
                                 }));
                             }}
                         />
-                        <Form
-                            module="notice"
-                            edited_id={notice_uuid}
-                            edited={notice}
-                            reset={this.state.reset}
-                            title={notice_uuid ? "NoticeForm.title" : "NoticeForm.title.new"}
-                            titleParams={{ code: notice_uuid || "" }}
-                            back={this.back}
-                            add={this._add}
-                            save={save ? this._save : null}
-                            canSave={this.canSave}
-                            reload={notice_uuid && this.reload}
-                            readOnly={readOnly}
-                            HeadPanel={NoticeMasterPanel}
-                            Panels={[NoticeNotificationPanel]}
-                            onEditedChanged={this.onEditedChanged}
-                            actions={actions}
-                        />
+                    <Form
+                        module="notice"
+                        edited_id={notice_uuid}
+                        edited={notice}
+                        reset={this.state.reset}
+                        title={notice_uuid ? "NoticeForm.title" : "NoticeForm.title.new"}
+                        titleParams={{ code: notice_uuid || "" }}
+                        back={this.back}
+                        add={add ? this._add : null}
+                        save={save && !readOnly ? this._save : null}
+                        canSave={this.canSave}
+                        reload={notice_uuid && this.reload}
+                        readOnly={readOnly}
+                        HeadPanel={NoticeMasterPanel}
+                        Panels={[NoticeNotificationPanel]}
+                        onEditedChanged={this.onEditedChanged}
+                        actions={actions}
+                    />
                     </Fragment>
                 )}
             </div>
@@ -226,7 +257,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = dispatch => {
-    return bindActionCreators({ createNotice, updateNotice, getNotice, journalize, coreAlert }, dispatch);
+    return bindActionCreators({ createNotice, updateNotice, getNotice, journalize, coreAlert, coreConfirm }, dispatch);
 };
 
 export default withHistory(

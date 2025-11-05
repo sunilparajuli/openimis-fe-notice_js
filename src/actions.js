@@ -16,7 +16,6 @@ export function fetchNotice(mm, uuid) {
 }
 
 export function fetchNotices(mm, prms) {
-  console.log('prms...', prms);
   $(!!prms.title_Icontains ? `"title_Icontains": "${prms.title_Icontains}"` : "");
   const payload = formatPageQueryWithCount(
     "notices",
@@ -89,15 +88,15 @@ export function createNotice(mm, notice, clientMutationLabel, clientMutationDeta
 }
 
 export function updateNotice(mm, notice, clientMutationLabel, clientMutationDetails = null) {
-  console.log('notice update', notice);
+
   let noticeGQL = `
     uuid: "${notice.uuid}"
     title: "${notice.title}"
-    dateOfIncident: "${notice.dateOfIncident}"
-    category: "${notice.category}"
-    flag: "${notice.flag}"
+    description: "${notice.description}"
     priority: "${notice.priority}"
-    detail: "${notice.detail}"
+    healthFacilityId: ${notice.healthFacility ? decodeId(notice.healthFacility.id) : null}
+    schedulePublish: ${notice.schedulePublish !== undefined ? notice.schedulePublish : false}
+    ${notice.publishStartDate ? `publishStartDate: "${notice.publishStartDate.toISOString()}"` : ''}
   `;
 
   let mutation = formatMutation("updateNotice", noticeGQL, clientMutationLabel, clientMutationDetails);
@@ -113,7 +112,6 @@ export function updateNotice(mm, notice, clientMutationLabel, clientMutationDeta
     }
   );
 }
-
 export function toggleNoticeStatus(mm, noticeId, isActive, clientMutationLabel = "Toggle Notice Status") {
   let toggleGQL = `
     uuid: "${noticeId}"
@@ -248,7 +246,7 @@ export function createAttachment(attachment, clientMutationLabel) {
 
   return graphql(
     mutation.payload,
-    ["CREATE_NOTICE_ATTACHMENT_REQ", "CREATE_NOTICE_ATTACHMENT_RESP", "CREATE_NOTICE_ATTACHMENT_ERR"],
+    ["NOTICE_MUTATION_REQ", "CREATE_NOTICE_ATTACHMENT_RESP", "NOTICE_MUTATION_ERR"],
     {
       clientMutationId: mutation.clientMutationId,
       clientMutationLabel,
@@ -272,7 +270,7 @@ export function updateAttachment(attachment, message) {
     },
     NOTICE_ATTACHMENTS_FULL_PROJECTION()
   );
-  return graphql(payload, UPDATE_NOTICE_ATTACHMENT_REQUEST, UPDATE_NOTICE_ATTACHMENT_SUCCESS, UPDATE_NOTICE_ATTACHMENT_FAILURE, { mutationLog: { message } });
+  return graphql(payload, "NOTICE_MUTATION_REQ", "UPDATE_NOTICE_ATTACHMENT_SUCCESS", "UPDATE_NOTICE_ATTACHMENT_FAILURE", { mutationLog: { message } });
 }
 
 

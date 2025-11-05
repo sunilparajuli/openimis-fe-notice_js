@@ -115,6 +115,11 @@ class NoticeAttachmentsDialog extends Component {
         attachmentToDelete: null,
         reset: state.reset + 1,
       }));
+      
+      // Refetch attachments to get complete data including document content
+      if (this.state.noticeUuid && this.props.notice && this.props.notice.uuid) {
+        this.props.fetchNoticeAttachments(this.props.notice);
+      }
     } else if (
       prevProps.confirmed !== this.props.confirmed &&
       this.props.confirmed &&

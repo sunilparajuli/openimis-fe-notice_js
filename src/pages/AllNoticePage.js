@@ -99,6 +99,7 @@ class AllNotices extends Component {
   };
 
   componentDidMount() {
+    
     this.fetchNoticesForPage();
   }
 
@@ -106,14 +107,15 @@ class AllNotices extends Component {
     const { currentPage } = this.state;
     const { noticesPageInfo } = this.props;
     const itemsPerPage = 10;
-
+    
     if (currentPage === 1) {
-      this.props.fetchNotices(this.props.modulesManager, [`first: ${itemsPerPage}`]);
+      this.props.fetchNotices(this.props.modulesManager, [`first: ${itemsPerPage}`, `isActive : ${true}`]);
     } else {
       const after = noticesPageInfo?.endCursor;
       this.props.fetchNotices(this.props.modulesManager, [
         `first: ${itemsPerPage}`,
         `after: "${after}"`,
+        `isActive : ${true}`
       ]);
     }
   };

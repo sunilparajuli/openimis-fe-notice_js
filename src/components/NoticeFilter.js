@@ -118,7 +118,6 @@ class NoticeFilter extends Component {
                         <PublishedComponent
                             pubRef="location.HealthFacilityPicker"
                             module="notice"
-                            label="notice.health_facility"
                             value={this._filterValue('healthFacility')}
                             onChange={v => this._onChangeFilter('healthFacility', v, `healthFacility_Uuid: "${v?.uuid}"`)}
                             withNull

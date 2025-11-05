@@ -52,6 +52,9 @@ class NoticeMasterPanel extends FormPanel {
         date: publishDate,
       });
       coreAlert(formatMessage(intl, "notice", "schedulePublishTitle"), message);
+    } else {
+      // If schedulePublish is unchecked, also clear the publishStartDate
+      this.updateAttribute("publishStartDate", null);
     }
   };
 
@@ -61,7 +64,7 @@ class NoticeMasterPanel extends FormPanel {
       edited,
       title = "Notice",
       titleParams = { label: "" },
-      readOnly = false,
+      readOnly = false, // Destructure readOnly prop here
       intl,
       reset,
     } = this.props;
@@ -73,9 +76,12 @@ class NoticeMasterPanel extends FormPanel {
     return (
       <Grid container>
         <Grid container className={classes.paperHeader}>
+          {/* Contributions here are usually for additional header elements,
+              you might want to pass readOnly if they contain editable fields */}
           <Contributions
             {...this.props}
             updateAttribute={this.updateAttribute}
+            readOnly={readOnly} // Pass readOnly to contributions
             contributionKey={NOTICE_MASTER_PANEL_CONTRIBUTION_KEY}
           />
         </Grid>
@@ -87,7 +93,7 @@ class NoticeMasterPanel extends FormPanel {
             value={edited.title}
             required={true}
             onChange={(v) => this.updateAttribute("title", v)}
-            readOnly={readOnly}
+            readOnly={readOnly} // Apply readOnly
           />
         </Grid>
 
@@ -98,8 +104,11 @@ class NoticeMasterPanel extends FormPanel {
             module="notice"
             label="notice.created_at"
             reset={reset}
-            onChange={(d) => this.updateAttribute("dateFrom", d)}
-            readOnly={readOnly}
+            // createdAt should typically be readOnly always, and not changeable by onChange
+            // If it's meant to be the "date from" for the notice, rename to avoid confusion.
+            // For now, assuming it's a display of creation date.
+            // onChange={(d) => this.updateAttribute("dateFrom", d)} // Remove or adjust this if createdAt is fixed
+            readOnly={true} // Apply readOnly, typically fixed for createdAt
             required={false}
           />
         </Grid>
@@ -112,7 +121,7 @@ class NoticeMasterPanel extends FormPanel {
             value={edited.priority}
             onChange={(v) => this.updateAttribute("priority", v)}
             required={true}
-            readOnly={readOnly}
+            readOnly={readOnly} // Apply readOnly
           />
         </Grid>
 
@@ -124,7 +133,7 @@ class NoticeMasterPanel extends FormPanel {
             value={edited.healthFacility}
             onChange={(v) => this.updateAttribute("healthFacility", v)}
             required={true}
-            readOnly={readOnly}
+            readOnly={readOnly} // Apply readOnly
           />
         </Grid>
 
@@ -137,7 +146,7 @@ class NoticeMasterPanel extends FormPanel {
             multiline
             rows={3}
             onChange={(v) => this.updateAttribute("description", v)}
-            readOnly={readOnly}
+            readOnly={readOnly} // Apply readOnly
           />
         </Grid>
 
@@ -149,7 +158,7 @@ class NoticeMasterPanel extends FormPanel {
                 checked={edited.schedulePublish || false}
                 onChange={(e) => this.handleSchedulePublishChange(e.target.checked)}
                 color="primary"
-                disabled={readOnly || isPublishDatePassed}
+                disabled={readOnly || isPublishDatePassed} // Use disabled for Switch
               />
             }
             label={formatMessage(intl, "notice", "notice.schedule_publish")}
@@ -163,7 +172,7 @@ class NoticeMasterPanel extends FormPanel {
               label={formatMessage(intl, "notice", "notice.publish_start_date")}
               value={edited.publishStartDate || null}
               onChange={(date) => this.updateAttribute("publishStartDate", date)}
-              disabled={readOnly || isPublishDatePassed}
+              disabled={readOnly || isPublishDatePassed} // Use disabled for DatePicker
               minDate={new Date()} // Prevent past dates
               required={edited.schedulePublish}
               format="MM/DD/YYYY"
@@ -173,9 +182,11 @@ class NoticeMasterPanel extends FormPanel {
           </Grid>
         )}
 
+        {/* Contributions at the bottom of the panel */}
         <Contributions
           {...this.props}
           updateAttribute={this.updateAttribute}
+          readOnly={readOnly} // Pass readOnly to contributions
           contributionKey={NOTICE_PANELS_CONTRIBUTION_KEY}
         />
       </Grid>
