@@ -104,7 +104,6 @@ class NoticeAttachmentsDialog extends Component {
       if (this.state.attachmentToDelete) {
         noticeAttachments = noticeAttachments.filter((a) => a.uuid !== this.state.attachmentToDelete.uuid);
       }
-      
       // Always ensure an empty row after mutation if not read-only
       if (!readOnly && !this.isEmptyAttachment(_.last(noticeAttachments))) {
         noticeAttachments.push({ title: "", type: "" });
@@ -115,7 +114,7 @@ class NoticeAttachmentsDialog extends Component {
         attachmentToDelete: null,
         reset: state.reset + 1,
       }));
-      
+
       // Refetch attachments to get complete data including document content
       if (this.state.noticeUuid && this.props.notice && this.props.notice.uuid) {
         this.props.fetchNoticeAttachments(this.props.notice);
@@ -200,7 +199,8 @@ class NoticeAttachmentsDialog extends Component {
     } else {
       if (!this.props.notice.attachments) this.props.notice.attachments = [];
       this.props.notice.attachments.push(attachment);
-      const noticeAttachments = [...this.state.noticeAttachments];
+      var noticeAttachments = [...this.props.notice.attachments];
+
       this.props.notice.attachmentsCount = this.props.notice.attachments.length;
       noticeAttachments.push({ title: "", type: "" });
       this.setState({ noticeAttachments });
@@ -240,7 +240,7 @@ class NoticeAttachmentsDialog extends Component {
     if (f.target.files) {
       const file = f.target.files[0];
       let noticeAttachments = [...this.state.noticeAttachments];
-      
+
       // Only restrict MIME types if devMode is false
       if (!this.state.devMode && !this.supportedMimeTypes.includes(file.type)) {
         this.props.coreAlert(
@@ -347,7 +347,8 @@ class NoticeAttachmentsDialog extends Component {
 
   render() {
     const { classes, notice, readOnly = false, fetchingNoticeAttachments, errorNoticeAttachments } = this.props;
-    const { open, noticeAttachments, reset, updatedAttachments, carouselOpen } = this.state;
+    const { noticeAttachments, reset, updatedAttachments, carouselOpen } = this.state;
+    const open = Boolean(this.props.notice);
 
     if (!notice) return null;
 
