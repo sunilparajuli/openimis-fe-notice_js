@@ -106,6 +106,7 @@ class NoticeForm extends Component {
                     this.showUploadDocumentsPrompt();
                 }
             });
+            historyPush(this.props.modulesManager, this.props.history, "notice.route.notices");
         }
     }
 
