@@ -61,7 +61,26 @@ export function getNotice(mm, notice_uuid) {
   );
 }
 
+const formatAttachmentsGQL = (attachments = []) =>
+  attachments.map((a) => `{
+        generalType: "${a.generalType}"
+        type: "${a.type || ""}"
+        title: "${a.title || ""}"
+        date: ${a.date ? `"${a.date}"` : null}
+        filename: "${a.filename || ""}"
+        mime: "${a.mime || ""}"
+        ${a.document ? `document: "${a.document}"` : ""}
+        ${a.url ? `url: "${a.url}"` : ""}
+      }`
+  ).join(",");
+
 export function createNotice(mm, notice, clientMutationLabel, clientMutationDetails = null) {
+  console.log("notice_in_actions", notice)
+  const attachmentsGQL =
+    notice.attachments?.length
+      ? `attachments: [${formatAttachmentsGQL(notice.attachments)}]`
+      : "";
+  console.log("attachmentGQL", attachmentsGQL)
   let noticeGQL = `
     title: "${notice.title}"
     description: "${notice.description}"
@@ -70,6 +89,7 @@ export function createNotice(mm, notice, clientMutationLabel, clientMutationDeta
     ${notice.uuid ? `uuid: "${notice.uuid}"` : ''}  
     schedulePublish: ${notice.schedulePublish !== undefined ? notice.schedulePublish : false}
     ${notice.publishStartDate ? `publishStartDate: "${notice.publishStartDate.toISOString()}"` : ''}
+    ${attachmentsGQL}
   `;
 
   let mutation = formatMutation("createNotice", noticeGQL, clientMutationLabel, clientMutationDetails);
@@ -121,8 +141,8 @@ export function toggleNoticeStatus(mm, noticeId, isActive, clientMutationLabel =
   return graphql(mutation.payload, ['NOTICE_TOGGLE_STATUS_REQ', 'NOTICE_TOGGLE_STATUS_RESP', 'NOTICE_TOGGLE_STATUS_ERR'], {
     clientMutationId: mutation.clientMutationId,
     clientMutationLabel,
-    uuid: noticeId, 
-    isActive,       
+    uuid: noticeId,
+    isActive,
     requestedDateTime: new Date(),
   });
 }

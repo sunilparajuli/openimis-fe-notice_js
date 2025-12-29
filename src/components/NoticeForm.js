@@ -95,9 +95,9 @@ class NoticeForm extends Component {
         } else if (prevProps.submittingMutation && !this.props.submittingMutation) {
             this.props.journalize(this.props.mutation);
             const wasNew = this.state.newNotice;
-            this.setState({ 
-                reset: this.state.reset + 1, 
-                isSaved: true, 
+            this.setState({
+                reset: this.state.reset + 1,
+                isSaved: true,
                 lockNew: false,
                 readOnlyAfterSave: true // Set readonly after save
             }, () => {
@@ -106,12 +106,13 @@ class NoticeForm extends Component {
                     this.showUploadDocumentsPrompt();
                 }
             });
+            historyPush(this.props.modulesManager, this.props.history, "notice.route.notices");
         }
     }
 
     showUploadDocumentsPrompt = () => {
         const { intl, coreConfirm } = this.props;
-        
+
         coreConfirm(
             formatMessage(intl, "notice", "notice.created.title"),
             formatMessage(intl, "notice", "notice.uploadDocuments.prompt"),
@@ -165,6 +166,7 @@ class NoticeForm extends Component {
             this.setState({ reset: this.state.reset + 1 });
             return;
         }
+        console.log("notice_in_notice_form", notice)
         this.setState(
             { lockNew: !notice.uuid },
             () => this.props.save(notice)
@@ -193,7 +195,18 @@ class NoticeForm extends Component {
                 onlyIfDirty: !readOnly,
             });
         }
-        if (!!notice_uuid && (!readOnly || notice.attachmentsCount > 0)) {
+        // if (!!notice_uuid && (!readOnly || notice.attachmentsCount > 0)) {
+        //     actions.push({
+        //         doIt: () => this.setState({ attachmentsNotice: notice }),
+        //         icon: (
+        //             <Badge badgeContent={notice.attachmentsCount || 0} color="primary">
+        //                 <AttachIcon />
+        //             </Badge>
+        //         ),
+        //     });
+        // }
+
+        if (!readOnly) {
             actions.push({
                 doIt: () => this.setState({ attachmentsNotice: notice }),
                 icon: (
@@ -204,43 +217,44 @@ class NoticeForm extends Component {
             });
         }
 
-
         return (
             <div>
                 <ProgressOrError progress={fetchingNotice} error={errorNotice} />
-                {(fetchedNotice || !notice_uuid) && (
-                    <Fragment>
-                        <NoticeAttachmentsDialog
-                            notice={this.state.attachmentsNotice}
-                            //readOnly={!rights.includes(RIGHT_ADD) || readOnly}
-                            close={() => this.setState({ attachmentsNotice: null })}
-                            onUpdated={() => {
-                                this.setState((state) => ({
-                                    notice: { ...state.notice, attachmentsCount: state.notice.attachmentsCount + 1 },
-                                    forcedDirty: true
-                                }));
-                            }}
-                        />
-                    <Form
-                        module="notice"
-                        edited_id={notice_uuid}
-                        edited={notice}
-                        reset={this.state.reset}
-                        title={notice_uuid ? "NoticeForm.title" : "NoticeForm.title.new"}
-                        titleParams={{ code: notice_uuid || "" }}
-                        back={this.back}
-                        add={add ? this._add : null}
-                        save={save && !readOnly ? this._save : null}
-                        canSave={this.canSave}
-                        reload={notice_uuid && this.reload}
-                        readOnly={readOnly}
-                        HeadPanel={NoticeMasterPanel}
-                        Panels={[NoticeNotificationPanel]}
-                        onEditedChanged={this.onEditedChanged}
-                        actions={actions}
+
+                <Fragment>
+                    <NoticeAttachmentsDialog
+                        notice={this.state.attachmentsNotice}
+                        //readOnly={!rights.includes(RIGHT_ADD) || readOnly}
+                        close={() => this.setState({ attachmentsNotice: null })}
+                        onUpdated={() => this.setState({ forcedDirty: true })}
+                    // onUpdated={() => {
+                    //     this.setState((state) => ({
+                    //         notice: { ...state.notice, attachmentsCount: state.notice.attachmentsCount + 1 },
+                    //         forcedDirty: true
+                    //     }));
+                    // }}
                     />
-                    </Fragment>
-                )}
+                    {(fetchedNotice || !notice_uuid) && (
+                        <Form
+                            module="notice"
+                            edited_id={notice_uuid}
+                            edited={notice}
+                            reset={this.state.reset}
+                            title={notice_uuid ? "NoticeForm.title" : "NoticeForm.title.new"}
+                            titleParams={{ code: notice_uuid || "" }}
+                            back={this.back}
+                            add={add ? this._add : null}
+                            save={save && !readOnly ? this._save : null}
+                            canSave={this.canSave}
+                            reload={notice_uuid && this.reload}
+                            readOnly={readOnly}
+                            HeadPanel={NoticeMasterPanel}
+                            Panels={[NoticeNotificationPanel]}
+                            onEditedChanged={this.onEditedChanged}
+                            actions={actions}
+                        />)}
+                </Fragment>
+
             </div>
         );
     }
