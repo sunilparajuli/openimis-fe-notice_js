@@ -43,30 +43,19 @@ class NoticesPage extends Component {
                 <NoticeSearcher
                     onDoubleClick={this.onDoubleClick}
                 />
-                {/* {rights.includes(RIGHT_NOTICE_ADD || true) && (
+                {rights.includes(RIGHT_NOTICE_ADD) && (
                     <Tooltip title={this.canAdd() ? formatMessage(intl, "notice", "addNoticeTooltip") : ""}>
                         <div className={classes.fab}>
-                            <Fab 
-                                color="primary" 
-                                disabled={!this.canAdd()} 
+                            <Fab
+                                color="primary"
+                                disabled={!this.canAdd()}
                                 onClick={this.onAdd}
                             >
                                 <AddIcon />
                             </Fab>
                         </div>
                     </Tooltip>
-                )} */}
-                <Tooltip title={this.canAdd() ? formatMessage(intl, "notice", "addNoticeTooltip") : ""}>
-                    <div className={classes.fab}>
-                        <Fab
-                            color="primary"
-                            disabled={!this.canAdd()}
-                            onClick={this.onAdd}
-                        >
-                            <AddIcon />
-                        </Fab>
-                    </div>
-                </Tooltip>
+                )}
             </div>
         );
     }

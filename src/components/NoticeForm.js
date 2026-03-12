@@ -3,7 +3,7 @@ import { injectIntl } from 'react-intl';
 import { connect } from "react-redux";
 import { withTheme, withStyles } from "@material-ui/core/styles";
 import { bindActionCreators } from "redux";
-import { Fab, Badge } from "@material-ui/core";
+import { Badge } from "@material-ui/core";
 import AttachIcon from "@material-ui/icons/AttachFile";
 import ReplayIcon from "@material-ui/icons/Replay";
 import {
@@ -11,10 +11,10 @@ import {
     Form, ProgressOrError, formatMessage, coreAlert, coreConfirm
 } from "@openimis/fe-core";
 import NoticeMasterPanel from "../components/NoticeMasterPanel";
-import NoticeNotificationPanel from "../components/NoticeNotificationPanel";
+// TODO: Email/SMS notification panel to be developed in a future release
 import NoticeAttachmentsDialog from "../components/NoticeAttachmentsDialog";
 import { createNotice, updateNotice, getNotice } from "../actions";
-import { RIGHT_ADD } from "../constants";
+import { RIGHT_NOTICE_ADD, RIGHT_NOTICE_EDIT } from "../constants";
 
 const styles = theme => ({
     page: theme.page,
@@ -37,19 +37,17 @@ class NoticeForm extends Component {
 
     _newNotice() {
         return {
-            uuid: this.props.notice?.uuid ?? null,
-            title: this.props.notice?.title ?? "",
-            description: this.props.notice?.description ?? "",
-            priority: this.props.notice?.priority ?? "MEDIUM",
-            healthFacility: this.props.notice?.healthFacility ?? null,
-            createdAt: this.props.notice?.createdAt ?? null,
-            updatedAt: this.props.notice?.updatedAt ?? null,
-            isActive: this.props.notice?.isActive ?? true,
-            sendSms: this.props.notice?.sendSms ?? false,
-            sendEmail: this.props.notice?.sendEmail ?? false,
-            attachmentsCount: this.props.notice?.attachmentsCount ?? 0,
-            schedulePublish: this.props.notice?.schedulePublish ?? false,
-            publishStartDate: this.props.notice?.publishStartDate ?? null,
+            uuid: null,
+            title: "",
+            description: "",
+            priority: "MEDIUM",
+            healthFacility: null,
+            createdAt: null,
+            updatedAt: null,
+            isActive: true,
+            attachmentsCount: 0,
+            schedulePublish: false,
+            publishStartDate: null,
         };
     }
 
@@ -99,29 +97,21 @@ class NoticeForm extends Component {
                 reset: this.state.reset + 1,
                 isSaved: true,
                 lockNew: false,
-                readOnlyAfterSave: true // Set readonly after save
-            }, () => {
-                // Show popup only for newly created notices
-                if (wasNew) {
-                    this.showUploadDocumentsPrompt();
-                }
+                readOnlyAfterSave: true,
+                pendingUploadPrompt: wasNew,
             });
             historyPush(this.props.modulesManager, this.props.history, "notice.route.notices");
+        } else if (prevProps.confirmed !== this.props.confirmed && this.props.confirmed && this.state.pendingUploadPrompt) {
+            this.setState({ pendingUploadPrompt: false, attachmentsNotice: this.state.notice });
         }
     }
 
     showUploadDocumentsPrompt = () => {
         const { intl, coreConfirm } = this.props;
-
         coreConfirm(
             formatMessage(intl, "notice", "notice.created.title"),
             formatMessage(intl, "notice", "notice.uploadDocuments.prompt"),
-        ).then((confirmed) => {
-            if (confirmed) {
-                // Open attachments dialog
-                this.setState({ attachmentsNotice: this.state.notice });
-            }
-        });
+        );
     }
 
     _add = () => {
@@ -166,7 +156,6 @@ class NoticeForm extends Component {
             this.setState({ reset: this.state.reset + 1 });
             return;
         }
-        console.log("notice_in_notice_form", notice)
         this.setState(
             { lockNew: !notice.uuid },
             () => this.props.save(notice)
@@ -185,7 +174,6 @@ class NoticeForm extends Component {
         const { notice, lockNew, readOnlyAfterSave } = this.state;
 
         const readOnly = readOnlyAfterSave;
-        console.log("readOnly", readOnly, "readOnlyAfterSave", readOnlyAfterSave, "lockNew", lockNew, "rights", rights);
 
         const actions = [];
         if (notice_uuid) {
@@ -195,16 +183,7 @@ class NoticeForm extends Component {
                 onlyIfDirty: !readOnly,
             });
         }
-        // if (!!notice_uuid && (!readOnly || notice.attachmentsCount > 0)) {
-        //     actions.push({
-        //         doIt: () => this.setState({ attachmentsNotice: notice }),
-        //         icon: (
-        //             <Badge badgeContent={notice.attachmentsCount || 0} color="primary">
-        //                 <AttachIcon />
-        //             </Badge>
-        //         ),
-        //     });
-        // }
+
 
         if (!readOnly) {
             actions.push({
@@ -224,15 +203,8 @@ class NoticeForm extends Component {
                 <Fragment>
                     <NoticeAttachmentsDialog
                         notice={this.state.attachmentsNotice}
-                        //readOnly={!rights.includes(RIGHT_ADD) || readOnly}
                         close={() => this.setState({ attachmentsNotice: null })}
                         onUpdated={() => this.setState({ forcedDirty: true })}
-                    // onUpdated={() => {
-                    //     this.setState((state) => ({
-                    //         notice: { ...state.notice, attachmentsCount: state.notice.attachmentsCount + 1 },
-                    //         forcedDirty: true
-                    //     }));
-                    // }}
                     />
                     {(fetchedNotice || !notice_uuid) && (
                         <Form
@@ -243,13 +215,17 @@ class NoticeForm extends Component {
                             title={notice_uuid ? "NoticeForm.title" : "NoticeForm.title.new"}
                             titleParams={{ code: notice_uuid || "" }}
                             back={this.back}
-                            add={add ? this._add : null}
-                            save={save && !readOnly ? this._save : null}
+                            add={add && rights.includes(RIGHT_NOTICE_ADD) ? this._add : null}
+                            save={
+                                save && !readOnly && 
+                                (notice_uuid ? rights.includes(RIGHT_NOTICE_EDIT) : rights.includes(RIGHT_NOTICE_ADD)) 
+                                    ? this._save : null
+                            }
                             canSave={this.canSave}
                             reload={notice_uuid && this.reload}
                             readOnly={readOnly}
                             HeadPanel={NoticeMasterPanel}
-                            Panels={[NoticeNotificationPanel]}
+                            Panels={[]}
                             onEditedChanged={this.onEditedChanged}
                             actions={actions}
                         />)}
@@ -268,6 +244,7 @@ const mapStateToProps = (state) => ({
     submittingMutation: state.notice?.submittingMutation,
     mutation: state.notice?.mutation,
     rights: state.core?.user?.i_user?.rights || [],
+    confirmed: state.core?.confirmed,
 });
 
 const mapDispatchToProps = dispatch => {

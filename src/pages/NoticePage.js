@@ -17,10 +17,8 @@ const styles = theme => ({
 
 class NoticePage extends Component {
     add = () => {
-        historyPush(this.props.modulesManager, this.props.history, "notice.route.notice_edit");
+        historyPush(this.props.modulesManager, this.props.history, "notice.route.noticeEdit");
     }
-
-    
     save = (notice) => {
         if (!notice.uuid) {
             this.props.createNotice(

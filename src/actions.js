@@ -16,7 +16,6 @@ export function fetchNotice(mm, uuid) {
 }
 
 export function fetchNotices(mm, prms) {
-  $(!!prms.title_Icontains ? `"title_Icontains": "${prms.title_Icontains}"` : "");
   const payload = formatPageQueryWithCount(
     "notices",
     prms,
@@ -30,7 +29,6 @@ export function fetchNotices(mm, prms) {
       "createdAt",
       "updatedAt",
       "isActive",
-      "attachmentCount"
     ]
   );
   return graphql(payload, "FETCH_NOTICES");
@@ -75,12 +73,10 @@ const formatAttachmentsGQL = (attachments = []) =>
   ).join(",");
 
 export function createNotice(mm, notice, clientMutationLabel, clientMutationDetails = null) {
-  console.log("notice_in_actions", notice)
   const attachmentsGQL =
     notice.attachments?.length
       ? `attachments: [${formatAttachmentsGQL(notice.attachments)}]`
       : "";
-  console.log("attachmentGQL", attachmentsGQL)
   let noticeGQL = `
     title: "${notice.title}"
     description: "${notice.description}"
@@ -132,41 +128,16 @@ export function updateNotice(mm, notice, clientMutationLabel, clientMutationDeta
     }
   );
 }
-export function toggleNoticeStatus(mm, noticeId, isActive, clientMutationLabel = "Toggle Notice Status") {
-  let toggleGQL = `
-    uuid: "${noticeId}"
-    isActive: ${isActive}
+export function toggleNoticeStatus(mm, noticeId, isActive) {
+  const mutation = `
+    mutation {
+      toggleNoticeStatus(uuid: "${noticeId}", isActive: ${isActive}) {
+        success
+        error
+      }
+    }
   `;
-  let mutation = formatMutation("toggleNoticeStatus", toggleGQL, clientMutationLabel);
-  return graphql(mutation.payload, ['NOTICE_TOGGLE_STATUS_REQ', 'NOTICE_TOGGLE_STATUS_RESP', 'NOTICE_TOGGLE_STATUS_ERR'], {
-    clientMutationId: mutation.clientMutationId,
-    clientMutationLabel,
-    uuid: noticeId,
-    isActive,
-    requestedDateTime: new Date(),
-  });
-}
-
-export function sendNoticeEmail(mm, noticeId, clientMutationLabel = "Send Notice Email", clientMutationDetails = null) {
-  let emailGQL = `uuid: "${noticeId}"`;
-  let mutation = formatMutation("sendNoticeEmail", emailGQL, clientMutationLabel);
-  return graphql(mutation.payload, ['NOTICE_EMAIL_REQ', 'NOTICE_EMAIL_RESP', 'NOTICE_EMAIL_ERR'], {
-    clientMutationId: mutation.clientMutationId,
-    clientMutationLabel,
-    clientMutationDetails,
-    requestedDateTime: new Date(),
-  });
-}
-
-export function sendNoticeSMS(mm, noticeId, clientMutationLabel = "Send Notice SMS", clientMutationDetails = null) {
-  let smsGQL = `uuid: "${noticeId}"`;
-  let mutation = formatMutation("sendNoticeSms", smsGQL, clientMutationLabel);
-  return graphql(mutation.payload, ['NOTICE_SMS_REQ', 'NOTICE_SMS_RESP', 'NOTICE_SMS_ERR'], {
-    clientMutationId: mutation.clientMutationId,
-    clientMutationLabel,
-    clientMutationDetails,
-    requestedDateTime: new Date(),
-  });
+  return graphql(mutation, 'NOTICE_TOGGLE_STATUS', { uuid: noticeId, isActive });
 }
 
 const NOTICE_ATTACHMENTS_FULL_PROJECTION = () => [
@@ -203,8 +174,8 @@ export function downloadAttachment(attachment) {
     }
   `;
   return graphql(payload, null, null, null, { skipDispatch: true }).then((response) => {
-    const { document, filename } = response.data.downloadAttachment.attachment;
-    const decodedData = atob(document);
+    const { document: docData, filename } = response.data.downloadAttachment.attachment;
+    const decodedData = atob(docData);
     const byteNumbers = new Array(decodedData.length);
     for (let i = 0; i < decodedData.length; i++) {
       byteNumbers[i] = decodedData.charCodeAt(i);
@@ -212,12 +183,12 @@ export function downloadAttachment(attachment) {
     const byteArray = new Uint8Array(byteNumbers);
     const blob = new Blob([byteArray], { type: attachment.mime });
     const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const link = window.document.createElement("a");
     link.href = url;
     link.download = filename;
-    document.body.appendChild(link);
+    window.document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    window.document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
   });
 }
@@ -274,23 +245,30 @@ export function createAttachment(attachment, clientMutationLabel) {
     }
   );
 }
-export function updateAttachment(attachment, message) {
-  const payload = formatMutation(
-    "updateNoticeAttachment",
+export function updateAttachment(attachment, clientMutationLabel) {
+  const payload = `
+    ${attachment.id ? `id: "${attachment.id}"` : ""}
+    ${attachment.noticeUuid ? `noticeUuid: "${attachment.noticeUuid}"` : ""}
+    ${attachment.generalType ? `generalType: "${attachment.generalType}"` : ""}
+    ${attachment.type ? `type: "${attachment.type}"` : ""}
+    ${attachment.title ? `title: "${attachment.title}"` : ""}
+    ${attachment.date ? `date: "${attachment.date}"` : ""}
+    ${attachment.filename ? `filename: "${attachment.filename}"` : ""}
+    ${attachment.mime ? `mime: "${attachment.mime}"` : ""}
+    ${attachment.url ? `url: "${attachment.url}"` : ""}
+    ${attachment.document ? `document: "${attachment.document}"` : ""}
+  `;
+  const mutation = formatMutation("updateNoticeAttachment", payload, clientMutationLabel);
+  const requestedDateTime = new Date();
+  return graphql(
+    mutation.payload,
+    ["NOTICE_MUTATION_REQ", "UPDATE_NOTICE_ATTACHMENT_RESP", "NOTICE_MUTATION_ERR"],
     {
-      uuid: attachment.uuid,
-      generalType: attachment.generalType,
-      type: attachment.type,
-      title: attachment.title,
-      date: attachment.date,
-      filename: attachment.filename,
-      mime: attachment.mime,
-      url: attachment.url,
-      document: attachment.document,
-    },
-    NOTICE_ATTACHMENTS_FULL_PROJECTION()
+      clientMutationId: mutation.clientMutationId,
+      clientMutationLabel,
+      requestedDateTime,
+    }
   );
-  return graphql(payload, "NOTICE_MUTATION_REQ", "UPDATE_NOTICE_ATTACHMENT_SUCCESS", "UPDATE_NOTICE_ATTACHMENT_FAILURE", { mutationLog: { message } });
 }
 
 
@@ -309,7 +287,6 @@ export function fetchRequestLogs(mm, prms) {
       "durationMs",
       "requestData",
       "responseData",
-      "statusCode",
       "user",
     ]
   );

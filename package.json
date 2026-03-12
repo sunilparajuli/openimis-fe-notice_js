@@ -14,13 +14,13 @@
     "build": "rollup -c",
     "start": "rollup -c -w",
     "format": "prettier src -w",
-    "prepare":"npm run build"
+    "prepare": "npm run build"
   },
-"peerDependencies": {
-  "react": "^17.0.2",
-  "react-dom": "^17.0.2",
-  "react-intl": "^5.8.1"
-},
+  "peerDependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-intl": "^5.8.1"
+  },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.6",
@@ -34,14 +34,19 @@
     "@rollup/plugin-json": "^4.0.3",
     "@rollup/plugin-node-resolve": "^7.1.3",
     "@rollup/plugin-url": "^5.0.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "jest": "^30.3.0",
     "lodash-uuid": "^0.0.3",
     "moment": "^2.25.3",
     "prettier": "^2.3.2",
     "prop-types": "^15.7.2",
     "react-autosuggest": "^10.0.2",
     "react-router-dom": "^5.2.0",
+    "react-test-renderer": "^19.2.4",
     "redux": "^4.0.5",
     "redux-api-middleware": "^3.2.1",
+    "redux-mock-store": "^1.5.5",
     "rollup": "^2.10.0"
   },
   "files": [

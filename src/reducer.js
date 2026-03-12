@@ -42,8 +42,6 @@ function reducer(
       };
     case "FETCH_NOTICES_RESP":
       var notices = parseData(action.payload.data.notices);
-      var pageinfos = pageInfo(action.payload.data.notices);
-      console.log("pageinfos", pageinfos);
       return {
         ...state,
         fetchingNotices: false,
@@ -88,41 +86,27 @@ function reducer(
       };
 
     case "NOTICE_TOGGLE_STATUS_REQ":
-      console.log("Toggle Request Meta:", action.meta);
-      return dispatchMutationReq(state, action);
+      return {
+        ...state,
+        fetchingNotices: false,
+      };
     case "NOTICE_TOGGLE_STATUS_RESP":
       return {
         ...state,
-        submittingMutation: false,
-        mutation: action.meta,
-        errorMutation: formatGraphQLError(action.payload),
+        notices: state.notices.map(notice =>
+          notice.uuid === action.meta.uuid
+            ? { ...notice, isActive: action.meta.isActive }
+            : notice
+        ),
+        notice: state.notice && state.notice.uuid === action.meta.uuid
+          ? { ...state.notice, isActive: action.meta.isActive }
+          : state.notice,
       };
     case "NOTICE_TOGGLE_STATUS_ERR":
-      return dispatchMutationErr(state, action);
-
-    case "NOTICE_EMAIL_REQ":
-      return dispatchMutationReq(state, action);
-    case "NOTICE_EMAIL_RESP":
       return {
         ...state,
-        submittingMutation: false,
-        mutation: action.meta,
-        errorMutation: formatGraphQLError(action.payload),
       };
-    case "NOTICE_EMAIL_ERR":
-      return dispatchMutationErr(state, action);
 
-    case "NOTICE_SMS_REQ":
-      return dispatchMutationReq(state, action);
-    case "NOTICE_SMS_RESP":
-      return {
-        ...state,
-        submittingMutation: false,
-        mutation: action.meta,
-        errorMutation: formatGraphQLError(action.payload),
-      };
-    case "NOTICE_SMS_ERR":
-      return dispatchMutationErr(state, action);
 
     case 'NOTICE_MUTATION_REQ':
       return dispatchMutationReq(state, action);
@@ -134,6 +118,8 @@ function reducer(
       return dispatchMutationErr(state, action);
     case 'CREATE_NOTICE_ATTACHMENT_RESP':
       return dispatchMutationResp(state, "createNoticeAttachment", action);
+    case 'UPDATE_NOTICE_ATTACHMENT_RESP':
+      return dispatchMutationResp(state, "updateNoticeAttachment", action);
 
     case 'NOTICE_ATTACHMENTS_REQ':
       return {

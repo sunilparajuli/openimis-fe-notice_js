@@ -3,27 +3,28 @@ import { injectIntl } from "react-intl";
 import { connect } from "react-redux";
 import { ScreenShare, ListAlt } from "@material-ui/icons";
 import { formatMessage, MainMenuContribution, withModulesManager } from "@openimis/fe-core";
+import { RIGHT_NOTICE_SEARCH, RIGHT_NOTICE_ADD } from "../constants";
 const NOTICE_MAIN_MENU_CONTRIBUTION_KEY = "notice.MainMenu";
 
 class NoticeMainMenu extends Component {
   render() {
     const { rights } = this.props;
     let entries = [];
-    if (true || (!!rights.filter((r) => r >= RIGHT_NOTICE_SEARCH && r <= RIGHT_NOTICE_ADD).length)) {
+    if (rights.includes(RIGHT_NOTICE_SEARCH)) {
       entries.push({
         text: formatMessage(this.props.intl, "notice", "mainMenu"),
         icon: <ListAlt />,
         route: "/notice/notices",
       });
     }
-    if (true || (!!rights.filter((r) => r >= RIGHT_NOTICE_SEARCH && r <= RIGHT_NOTICE_ADD).length)) {
+    if (rights.includes(RIGHT_NOTICE_SEARCH)) {
       entries.push({
         text: formatMessage(this.props.intl, "notice", "mainMenu.published"),
         icon: <ListAlt />,
         route: "/notice/allNotices",
       });
     }
-    if (true || (!!rights.filter((r) => r >= RIGHT_NOTICE_SEARCH && r <= RIGHT_NOTICE_ADD).length)) {
+    if (rights.includes(RIGHT_NOTICE_SEARCH)) {
       entries.push({
         text: formatMessage(this.props.intl, "notice", "Logs"),
         icon: <ListAlt />,

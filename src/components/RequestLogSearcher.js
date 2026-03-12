@@ -120,18 +120,11 @@ class RequestLogSearcher extends Component {
 
   openDialog = (rowId, type) => {
     const key = type === "request" ? "openRequestDialog" : "openResponseDialog";
-    console.log(`Opening ${type} dialog for row ${rowId}`);
-    this.setState(
-      { [key]: rowId },
-      () => {
-        console.log(`State updated - ${key}: ${this.state[key]}`);
-      }
-    );
+    this.setState({ [key]: rowId });
   };
 
   closeDialog = (type) => {
     const key = type === "request" ? "openRequestDialog" : "openResponseDialog";
-    console.log(`Closing ${type} dialog`);
     this.setState({ [key]: null });
   };
 
@@ -140,7 +133,6 @@ class RequestLogSearcher extends Component {
       const parsed = JSON.parse(jsonString);
       return JSON.stringify(parsed, null, 2);
     } catch (e) {
-      console.error("JSON Parse Error:", e.message);
       return "Invalid JSON: " + jsonString.substring(0, 100) + "...";
     }
   };
@@ -167,7 +159,6 @@ class RequestLogSearcher extends Component {
       },
       (r) => r.user || "Anonymous",
       (r) => {
-        if (!r.id) console.warn("Row missing id:", r);
         const jsonData = this.formatJsonData(r.requestData);
         const rowId = r.id; // Explicitly use the base64 ID
         return (
@@ -202,7 +193,6 @@ class RequestLogSearcher extends Component {
         );
       },
       (r) => {
-        if (!r.id) console.warn("Row missing id:", r);
         const jsonData = this.formatJsonData(r.responseData);
         const rowId = r.id; // Explicitly use the base64 ID
         return (
@@ -249,8 +239,6 @@ class RequestLogSearcher extends Component {
       errorRequestLogs,
     } = this.props;
     let count = requestLogsPageInfo.totalCount ?? 0;
-    console.log("Request Logs Data:", requestLogs);
-    console.log("Current State:", this.state);
 
     return (
       <Fragment>

@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import _ from "lodash";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import { injectIntl } from "react-intl";
@@ -29,7 +30,6 @@ import {
   withTooltip,
   formatMessage,
   formatMessageWithValues,
-  journalize,
   coreConfirm,
   coreAlert,
 } from "@openimis/fe-core";
@@ -74,7 +74,7 @@ class NoticeAttachmentsDialog extends Component {
     if (prevProps.noticeAttachments !== this.props.noticeAttachments) {
       let noticeAttachments = [...(this.props.noticeAttachments || [])];
       // Ensure an empty row is added when editing, unless read-only
-      if (this.state.devMode || (!readOnly && this.props.rights.includes(RIGHT_NOTICE_ADD) && _.last(noticeAttachments) !== {})) {
+      if (this.state.devMode || (!readOnly && this.props.rights.includes(RIGHT_NOTICE_ADD) && !this.isEmptyAttachment(_.last(noticeAttachments)))) {
         noticeAttachments.push({ title: "", type: "" });
       }
       this.setState({ noticeAttachments, updatedAttachments: new Set() });
@@ -472,7 +472,7 @@ class NoticeAttachmentsDialog extends Component {
             <PublishedComponent
               pubRef="notice.Carousel"
               attachments={noticeAttachments}
-              claim={this.state.attachmentsClaim}
+              notice={this.props.notice}
               onClose={this.toggleCarousel}
             />
           )}
@@ -516,7 +516,6 @@ const mapDispatchToProps = (dispatch) =>
       createAttachment,
       updateAttachment,
       coreConfirm,
-      journalize,
       coreAlert,
     },
     dispatch
