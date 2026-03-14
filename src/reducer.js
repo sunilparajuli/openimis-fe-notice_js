@@ -7,6 +7,7 @@ function reducer(
   state = {
     mutation: {},
     submittingMutation: false,
+    submittingAttachment: false,
     fetchingNotices: false,
     errorNotices: null,
     fetchedNotices: false,
@@ -117,9 +118,18 @@ function reducer(
     case 'NOTICE_MUTATION_ERR':
       return dispatchMutationErr(state, action);
     case 'CREATE_NOTICE_ATTACHMENT_RESP':
-      return dispatchMutationResp(state, "createNoticeAttachment", action);
     case 'UPDATE_NOTICE_ATTACHMENT_RESP':
-      return dispatchMutationResp(state, "updateNoticeAttachment", action);
+      return {
+        ...state,
+        submittingAttachment: false,
+        mutation: action.meta,
+        errorMutation: formatGraphQLError(action.payload),
+      };
+
+    case 'NOTICE_ATTACHMENT_REQ':
+      return { ...state, submittingAttachment: true };
+    case 'NOTICE_ATTACHMENT_ERR':
+      return { ...state, submittingAttachment: false };
 
     case 'NOTICE_ATTACHMENTS_REQ':
       return {

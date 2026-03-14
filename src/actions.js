@@ -237,7 +237,7 @@ export function createAttachment(attachment, clientMutationLabel) {
 
   return graphql(
     mutation.payload,
-    ["NOTICE_MUTATION_REQ", "CREATE_NOTICE_ATTACHMENT_RESP", "NOTICE_MUTATION_ERR"],
+    ["NOTICE_ATTACHMENT_REQ", "CREATE_NOTICE_ATTACHMENT_RESP", "NOTICE_ATTACHMENT_ERR"],
     {
       clientMutationId: mutation.clientMutationId,
       clientMutationLabel,
@@ -262,7 +262,7 @@ export function updateAttachment(attachment, clientMutationLabel) {
   const requestedDateTime = new Date();
   return graphql(
     mutation.payload,
-    ["NOTICE_MUTATION_REQ", "UPDATE_NOTICE_ATTACHMENT_RESP", "NOTICE_MUTATION_ERR"],
+    ["NOTICE_ATTACHMENT_REQ", "UPDATE_NOTICE_ATTACHMENT_RESP", "NOTICE_ATTACHMENT_ERR"],
     {
       clientMutationId: mutation.clientMutationId,
       clientMutationLabel,

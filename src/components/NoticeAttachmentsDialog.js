@@ -98,8 +98,8 @@ class NoticeAttachmentsDialog extends Component {
         noticeAttachments.push({ title: "", type: "" });
         this.props.onUpdated();
       }
-      this.setState({ open: true, noticeUuid: null, noticeAttachments, updatedAttachments: new Set() });
-    } else if (prevProps.submittingMutation && !this.props.submittingMutation) {
+      this.setState({ noticeAttachments, updatedAttachments: new Set() });
+    } else if (prevProps.submittingAttachment && !this.props.submittingAttachment) {
       let noticeAttachments = [...this.state.noticeAttachments];
       if (this.state.attachmentToDelete) {
         noticeAttachments = noticeAttachments.filter((a) => a.uuid !== this.state.attachmentToDelete.uuid);
@@ -499,7 +499,7 @@ class NoticeAttachmentsDialog extends Component {
 const mapStateToProps = (state) => ({
   rights: state.core?.user?.i_user?.rights || [],
   confirmed: state.core.confirmed,
-  submittingMutation: state.notice.submittingMutation,
+  submittingAttachment: state.notice.submittingAttachment,
   mutation: state.notice.mutation,
   fetchingNoticeAttachments: state.notice.fetchingNoticeAttachments,
   fetchedNoticeAttachments: state.notice.fetchedNoticeAttachments,
