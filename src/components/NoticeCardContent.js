@@ -49,7 +49,7 @@ const styles = (theme) => ({
 
 class NoticeCardContent extends Component {
   render() {
-    const { classes, notice, textSize, textColor } = this.props;
+    const { classes, notice, textSize, textColor, lineHeight, highContrast, dyslexicFont } = this.props;
 
     const getTextStyles = (size) => {
       if (size <= 33) {
@@ -62,35 +62,56 @@ class NoticeCardContent extends Component {
     };
 
     const sizes = getTextStyles(textSize);
+    const fontStyle = dyslexicFont ? { fontFamily: "OpenDyslexic, 'Comic Sans MS', cursive" } : {};
+    const contrastColor = highContrast ? "#ffffff" : (textColor || "#000000");
 
     return (
-      <Card  elevation={0} className={classes.card}>
+      <Card elevation={0} className={classes.card} style={{ backgroundColor: highContrast ? "#000000" : "inherit" }}>
         <CardContent className={classes.cardContent}>
           <Box className={classes.title}>
-            <NotificationImportantIcon style={{ marginRight: 8, color: textColor || "#000000" }} />
+            <NotificationImportantIcon style={{ marginRight: 8, color: contrastColor }} />
             <Typography
               variant={sizes.title.variant}
               component={sizes.title.variant}
-              style={{ color: textColor || "#000000", fontWeight: 500, fontSize: sizes.title.fontSize }}
+              style={{ 
+                color: contrastColor, 
+                fontWeight: 500, 
+                fontSize: sizes.title.fontSize,
+                lineHeight: lineHeight,
+                ...fontStyle
+              }}
             >
               {notice.title}
             </Typography>
           </Box>
           <Typography
             variant={sizes.description.variant}
-            style={{ color: textColor || "#000000", fontSize: sizes.description.fontSize }}
+            style={{ 
+              color: contrastColor, 
+              fontSize: sizes.description.fontSize,
+              lineHeight: lineHeight,
+              ...fontStyle
+            }}
           >
             {notice.description}
           </Typography>
           <Box className={classes.metadata}>
             <Box display="flex" alignItems="center">
-              <LocalHospitalIcon fontSize="small" style={{ marginRight: 8, color: textColor || "#000000" }} />
-              <Typography variant={sizes.metadata.variant} style={{ color: textColor || "#616161", fontSize: sizes.metadata.fontSize }}>
+              <LocalHospitalIcon fontSize="small" style={{ marginRight: 8, color: contrastColor }} />
+              <Typography 
+                variant={sizes.metadata.variant} 
+                style={{ 
+                  color: highContrast ? "#ffffff" : "#616161", 
+                  fontSize: sizes.metadata.fontSize,
+                  lineHeight: lineHeight,
+                  ...fontStyle
+                }}
+              >
                 {notice.healthFacility?.name || "No Facility"}
               </Typography>
             </Box>
             <Box display="flex" alignItems="center">
-              <PriorityHighIcon fontSize="small" style={{ marginRight: 8, color: textColor || "#000000" }} />
+              <PriorityHighIcon fontSize="small" style={{ marginRight: 8, color: contrastColor }} />
               <PriorityChip priority={notice.priority} />
             </Box>
             {notice.attachmentCount > 0 && (
@@ -98,6 +119,7 @@ class NoticeCardContent extends Component {
                 label={`${notice.attachmentCount} Attachment${notice.attachmentCount > 1 ? "s" : ""}`}
                 size="small"
                 className={classes.chip}
+                style={highContrast ? { border: "1px solid #ffffff", color: "#ffffff", backgroundColor: "#000000" } : {}}
               />
             )}
           </Box>

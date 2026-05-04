@@ -34,72 +34,91 @@ import Pagination from "../components/Pagination";
 import NoticeCalendar from "../components/NoticeCalendar";
 import NoticeCardContent from "../components/NoticeCardContent";
 import AccessibilityControls from "../components/AccessibilityControls";
+import Magnifier from "../components/Magnifier";
 
 const styles = (theme) => ({
-  page: theme.page,
-  fab: theme.fab,
-  list: {
-    width: "100%",
-    padding: theme.spacing(2),
-  },
-  listItem: {
-    padding: theme.spacing(2),
-    display: "flex",
-    alignItems: "center",
-    transition: "background-color 0.3s ease-in-out",
-    "&:hover": {
-      backgroundColor: theme.palette.action.hover,
-      cursor: "pointer",
-    },
+  page: {
+    ...theme.page,
+    background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+    minHeight: "100vh",
   },
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing(2),
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(2),
+    marginBottom: theme.spacing(4),
+    padding: theme.spacing(3),
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    backdropFilter: "blur(10px)",
+    borderRadius: theme.spacing(2),
+    boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.07)",
+    border: "1px solid rgba(255, 255, 255, 0.18)",
   },
   title: {
-    fontWeight: 500,
+    fontWeight: 700,
+    color: theme.palette.primary.main,
+    letterSpacing: "-0.02em",
   },
-  loading: {
+  list: {
+    width: "100%",
     display: "flex",
     flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
+    gap: theme.spacing(2),
+    padding: 0,
+  },
+  listItem: {
+    padding: theme.spacing(1),
+    borderRadius: theme.spacing(2),
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    border: "1px solid rgba(255, 255, 255, 0.3)",
+    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    "&:hover": {
+      transform: "translateY(-4px)",
+      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+      backgroundColor: "#ffffff",
+    },
   },
   contentContainer: {
     flexGrow: 1,
     width: "100%",
     minWidth: 0,
-    marginLeft: theme.spacing(2),
   },
   secondaryAction: {
     display: "flex",
+    flexDirection: "column",
     alignItems: "center",
-    justifyContent: "flex-end",
-    minWidth: "15%",
+    justifyContent: "center",
+    gap: theme.spacing(1),
+    position: "relative",
+    transform: "none",
+    top: "auto",
+    right: "auto",
   },
-  previewButton: {
-    marginLeft: theme.spacing(1),
+  fab: theme.fab,
+  loading: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
   },
-  dialogTitle: theme.dialog.title,
-  dialogContent: theme.dialog.content,
 });
+
 
 class AllNotices extends Component {
   state = {
     currentPage: 1,
     carouselOpen: false,
     selectedNotice: null,
-    textSize: 50, // Default to middle of range (0-100)
-    textColor: "#000000", // Default color (black)
+    textSize: 50,
+    textColor: "#000000",
+    lineHeight: 1.5,
+    highContrast: false,
+    dyslexicFont: false,
+    magnifierActive: false,
   };
 
   componentDidMount() {
-    
     this.fetchNoticesForPage();
   }
 
@@ -170,6 +189,22 @@ class AllNotices extends Component {
     this.setState({ textColor: event.target.value });
   };
 
+  handleLineHeightChange = (event, newValue) => {
+    this.setState({ lineHeight: newValue });
+  };
+
+  toggleHighContrast = () => {
+    this.setState((prevState) => ({ highContrast: !prevState.highContrast }));
+  };
+
+  toggleDyslexicFont = () => {
+    this.setState((prevState) => ({ dyslexicFont: !prevState.dyslexicFont }));
+  };
+
+  toggleMagnifier = () => {
+    this.setState((prevState) => ({ magnifierActive: !prevState.magnifierActive }));
+  };
+
   render() {
     const {
       classes,
@@ -182,7 +217,17 @@ class AllNotices extends Component {
       noticeAttachments,
       errorNoticeAttachments,
     } = this.props;
-    const { currentPage, carouselOpen, selectedNotice, textSize, textColor } = this.state;
+    const { 
+      currentPage, 
+      carouselOpen, 
+      selectedNotice, 
+      textSize, 
+      textColor, 
+      lineHeight, 
+      highContrast, 
+      dyslexicFont, 
+      magnifierActive 
+    } = this.state;
 
     if (fetchingNotices) {
       return (
@@ -216,7 +261,7 @@ class AllNotices extends Component {
 
     return (
       <div className={classes.page}>
-        {/* Header with Title and Accessibility Controls */}
+        <Magnifier active={magnifierActive} />
         <div className={classes.header}>
           <Typography variant="h4" className={classes.title}>
             {formatMessageWithValues(intl, "notice", "allNoticesTitle")}
@@ -224,8 +269,16 @@ class AllNotices extends Component {
           <AccessibilityControls
             textSize={textSize}
             textColor={textColor}
+            lineHeight={lineHeight}
+            highContrast={highContrast}
+            dyslexicFont={dyslexicFont}
+            magnifierActive={magnifierActive}
             onTextSizeChange={this.handleTextSizeChange}
             onTextColorChange={this.handleTextColorChange}
+            onLineHeightChange={this.handleLineHeightChange}
+            onToggleHighContrast={this.toggleHighContrast}
+            onToggleDyslexicFont={this.toggleDyslexicFont}
+            onToggleMagnifier={this.toggleMagnifier}
           />
         </div>
         <List className={classes.list}>
@@ -234,7 +287,8 @@ class AllNotices extends Component {
               <ListItem
                 className={classes.listItem}
                 style={{
-                  backgroundColor: notice.isActive ? "#e1f5fe" : "#fff3e0",
+                  backgroundColor: highContrast ? "#000000" : (notice.isActive ? "#e1f5fe" : "#fff3e0"),
+                  border: highContrast ? "2px solid #ffffff" : "none",
                 }}
               >
                 <NoticeCalendar createdAt={notice.createdAt} />
@@ -242,13 +296,16 @@ class AllNotices extends Component {
                   <NoticeCardContent
                     notice={notice}
                     textSize={textSize}
-                    textColor={textColor}
+                    textColor={highContrast ? "#ffffff" : textColor}
+                    lineHeight={lineHeight}
+                    highContrast={highContrast}
+                    dyslexicFont={dyslexicFont}
                   />
                 </div>
-                <ListItemSecondaryAction className={classes.secondaryAction}>
+                <div className={classes.secondaryAction}>
                   {notice.attachmentCount > 0 && (
                     <IconButton
-                      className={classes.previewButton}
+                      size="small"
                       onClick={(e) => {
                         e.stopPropagation();
                         this.toggleCarousel(notice);
@@ -258,10 +315,10 @@ class AllNotices extends Component {
                       <SlideshowIcon />
                     </IconButton>
                   )}
-                  <IconButton onClick={() => this.editNotice(notice.uuid)}>
-                    <EditIcon />
+                  <IconButton size="small" onClick={() => this.editNotice(notice.uuid)}>
+                    <EditIcon fontSize="small" />
                   </IconButton>
-                </ListItemSecondaryAction>
+                </div>
               </ListItem>
               {index < notices.length - 1 && <Divider />}
             </Fragment>

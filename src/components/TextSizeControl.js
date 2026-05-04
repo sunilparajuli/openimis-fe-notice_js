@@ -5,21 +5,23 @@ import { Slider, Typography } from "@material-ui/core";
 
 const styles = (theme) => ({
   sliderContainer: {
-    width: 100, // Smaller, fixed width
+    width: 60, // Reduced from 100
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
   },
   sliderLabel: {
-    fontSize: "0.75rem", // Smaller font (12px)
+    fontSize: "0.6rem", // Even smaller
     color: theme.palette.text.secondary,
+    lineHeight: 1,
   },
   slider: {
-    height: 4, // Thinner slider
+    padding: "8px 0",
     "& .MuiSlider-thumb": {
-      width: 12, // Smaller thumb
-      height: 12,
+      width: 8, // Smaller thumb
+      height: 8,
     },
+
     "& .MuiSlider-rail": {
       height: 2, // Thinner rail
     },
